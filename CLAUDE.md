@@ -60,3 +60,19 @@ interface Trip { id: string; title: string; legs: Leg[]; }
 **MVP에 포함**: Leg 생성·수정·삭제, 지도 경로 시각화, 교통수단 필터, JSON Export/Import, localStorage 자동저장.
 
 **MVP에서 제외**: 로그인, 서버/DB, 사진 업로드, 실시간 협업, 다중 외부 API.
+
+## OpenSpec Workflow
+
+`DELIVERYPLAN.md` §7 의 3회차 비교 실험(`md-driven-dev` vs `openspec-driven-dev`)을 위해 OpenSpec이 설치되어 있다.
+
+**슬래시 커맨드** (`.claude/commands/opsx/`):
+- `/opsx:explore` — 아이디어 탐색·요구사항 명확화
+- `/opsx:propose <idea>` — change 폴더 + proposal · specs · design · tasks 아티팩트 생성
+- `/opsx:apply` — change의 task 체크리스트를 따라 구현
+- `/opsx:archive` — 완료된 change를 `openspec/specs/` 로 이관
+
+**디렉터리**:
+- `openspec/changes/` — 진행 중 change 제안
+- `openspec/specs/` — 아카이브된 스펙
+
+OpenSpec change는 `openspec-driven-dev` 브랜치에서만 사용하고, `md-driven-dev` 브랜치는 기존 MD 문서만 참조한다 (비교 실험 무결성 유지).
