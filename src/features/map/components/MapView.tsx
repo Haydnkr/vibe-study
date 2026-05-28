@@ -16,6 +16,22 @@ import TransportPolyline from './TransportPolyline';
 const DEFAULT_CENTER: [number, number] = [37.5665, 126.978]; // Seoul
 const DEFAULT_ZOOM = 3;
 
+/**
+ * Tile source. If NEXT_PUBLIC_MAPTILER_KEY is set, use MapTiler with Korean
+ * labels everywhere. Otherwise fall back to OSM (local-language labels).
+ *
+ * To get a free key: https://www.maptiler.com/cloud/ (free tier: 100k req/month)
+ * Then set NEXT_PUBLIC_MAPTILER_KEY in .env.local locally and in Vercel
+ * Project Settings → Environment Variables.
+ */
+const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
+const TILE_URL = MAPTILER_KEY
+  ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}&language=ko`
+  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+const TILE_ATTRIBUTION = MAPTILER_KEY
+  ? '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
+  : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+
 export default function MapView() {
   // Subscribe only to primitive slices — they are stable references from the
   // store and won't cause re-renders unless their content actually changes.
@@ -54,10 +70,7 @@ export default function MapView() {
       className="h-full w-full"
       style={{ background: '#f1f5f9' }}
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
+      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
 
       <BoundsFitter bounds={bounds} />
 
