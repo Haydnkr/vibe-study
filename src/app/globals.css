@@ -13,3 +13,29 @@
     min-height: 100vh;
   }
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Travel route ant-march animation
+   ──────────────────────────────────────────────────────────────
+   Polylines drawn by react-leaflet land in .leaflet-overlay-pane as
+   <path> elements with stroke-dasharray. Animating stroke-dashoffset
+   creates a continuous "ant march" effect — the dashes flow along the
+   route, suggesting movement.
+   ────────────────────────────────────────────────────────────── */
+
+@keyframes leaflet-route-march {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+
+.leaflet-overlay-pane svg path {
+  animation: leaflet-route-march 1.4s linear infinite;
+}
+
+/* Respect users who opt out of motion */
+@media (prefers-reduced-motion: reduce) {
+  .leaflet-overlay-pane svg path {
+    animation: none;
+  }
+}
