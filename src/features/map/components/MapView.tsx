@@ -17,20 +17,23 @@ const DEFAULT_CENTER: [number, number] = [37.5665, 126.978]; // Seoul
 const DEFAULT_ZOOM = 3;
 
 /**
- * Tile source. If NEXT_PUBLIC_MAPTILER_KEY is set, use MapTiler with Korean
- * labels everywhere. Otherwise fall back to OSM (local-language labels).
+ * Tile source policy:
+ *  - If NEXT_PUBLIC_MAPTILER_KEY is set → MapTiler with Korean labels worldwide
+ *  - Otherwise → Wikimedia `osm-intl` tiles, which use international (English)
+ *    labels worldwide. No API key required.
  *
- * To get a free key: https://www.maptiler.com/cloud/ (free tier: 100k req/month)
- * Then set NEXT_PUBLIC_MAPTILER_KEY in .env.local locally and in Vercel
- * Project Settings → Environment Variables.
+ * To enable Korean tiles:
+ *  1. Get a free key at https://www.maptiler.com/cloud/ (100k req/month free)
+ *  2. Set NEXT_PUBLIC_MAPTILER_KEY in .env.local locally and in Vercel
+ *     Project Settings → Environment Variables.
  */
 const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 const TILE_URL = MAPTILER_KEY
   ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}&language=ko`
-  : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  : 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png';
 const TILE_ATTRIBUTION = MAPTILER_KEY
   ? '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-  : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>';
+  : '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia maps</a> | © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
 
 export default function MapView() {
   // Subscribe only to primitive slices — they are stable references from the
