@@ -8,6 +8,8 @@ interface Props {
   leg: Leg;
   /** Color resolved from the owning Trip's Category (or NEUTRAL fallback). */
   color: string;
+  /** When true, dim the line (e.g., during playback for non-active legs). */
+  dimmed?: boolean;
 }
 
 /**
@@ -16,7 +18,7 @@ interface Props {
  * - dashArray + weight: from TRANSPORT_STYLE
  * - Channel separation enforced by types — TRANSPORT_STYLE has no `color` field.
  */
-export default function TransportPolyline({ leg, color }: Props) {
+export default function TransportPolyline({ leg, color, dimmed = false }: Props) {
   const style = TRANSPORT_STYLE[leg.transport];
   const positions: [number, number][] = [
     [leg.from.lat, leg.from.lng],
@@ -28,9 +30,9 @@ export default function TransportPolyline({ leg, color }: Props) {
       positions={positions}
       pathOptions={{
         color,
-        weight: style.weight,
+        weight: style.weight + 1,
         dashArray: style.dash,
-        opacity: 0.85,
+        opacity: dimmed ? 0.25 : 1,
       }}
     />
   );

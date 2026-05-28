@@ -11,6 +11,7 @@ import {
   useTravelMapStore,
 } from '@/features/trips/store';
 import CityMarker from './CityMarker';
+import PlaybackOverlay from './PlaybackOverlay';
 import TransportPolyline from './TransportPolyline';
 
 const DEFAULT_CENTER: [number, number] = [37.5665, 126.978]; // Seoul
@@ -41,6 +42,18 @@ export default function MapView() {
   const categories = useTravelMapStore((s) => s.categories);
   const filterTransports = useTravelMapStore((s) => s.filterTransports);
   const selectedTripId = useTravelMapStore((s) => s.selectedTripId);
+  const playingTripId = useTravelMapStore((s) => s.playingTripId);
+  const stopPlayback = useTravelMapStore((s) => s.stopPlayback);
+
+  // Playback resolution (simple lookups, no need to go through state-based selectors)
+  const playingTrip = useMemo(
+    () => trips.find((t) => t.id === playingTripId),
+    [trips, playingTripId]
+  );
+  const playingColor = useMemo(() => {
+    if (!playingTrip?.categoryId) return '#888888';
+    return categories.find((c) => c.id === playingTrip.categoryId)?.color ?? '#888888';
+  }, [playingTrip, categories]);
 
   // Derive visible legs + visit aggregation + bounds via store selectors.
   // useMemo deps mirror the slices the selectors actually consume.
@@ -79,17 +92,31 @@ export default function MapView() {
         maxZoom={19}
       />
 
-      <BoundsFitter bounds={bounds} />
+      {!playingTripId && <BoundsFitter bounds={bounds} />}
 
       {/* Polylines first so markers sit on top */}
       {visibleLegs.map(({ tripId, leg, color }) => (
-        <TransportPolyline key={`${tripId}-${leg.id}`} leg={leg} color={color} />
+        <TransportPolyline
+          key={`${tripId}-${leg.id}`}
+          leg={leg}
+          color={color}
+          dimmed={playingTripId !== undefined && tripId !== playingTripId}
+        />
       ))}
 
       {/* One marker per unique (name + country) */}
       {Array.from(cityVisits.entries()).map(([k, { city, visits }]) => (
         <CityMarker key={k} city={city} visits={visits} />
       ))}
+
+      {/* Playback overlay — sequential vehicle traversal */}
+      {playingTrip && (
+        <PlaybackOverlay
+          legs={playingTrip.legs}
+          color={playingColor}
+          onFinish={stopPlayback}
+        />
+      )}
     </MapContainer>
   );
 }

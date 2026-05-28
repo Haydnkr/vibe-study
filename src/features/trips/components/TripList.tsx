@@ -44,9 +44,13 @@ interface CardProps {
 }
 
 function TripCard({ trip, selected, onSelect, onEdit, onDelete }: CardProps) {
-  // Selector helper requires full state — use store.getState() snapshot through hook
   const accentColor = useTravelMapStore((s) => selectTripAccentColor(s, trip.id));
+  const playingTripId = useTravelMapStore((s) => s.playingTripId);
+  const startPlayback = useTravelMapStore((s) => s.startPlayback);
+  const stopPlayback = useTravelMapStore((s) => s.stopPlayback);
   const tags = trip.tags ?? [];
+  const isPlaying = playingTripId === trip.id;
+  const canPlay = trip.legs.length > 0;
 
   return (
     <section
@@ -73,7 +77,23 @@ function TripCard({ trip, selected, onSelect, onEdit, onDelete }: CardProps) {
             </div>
           )}
         </div>
-        <div onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+          <button
+            type="button"
+            disabled={!canPlay}
+            onClick={() => (isPlaying ? stopPlayback() : startPlayback(trip.id))}
+            title={
+              !canPlay
+                ? 'Leg을 먼저 추가하세요'
+                : isPlaying
+                  ? '재생 중지'
+                  : '여행 재생'
+            }
+            className="inline-flex h-7 items-center gap-1 rounded-md border border-hairline px-2 text-[11px] font-medium text-ink hover:bg-surface-soft disabled:opacity-40"
+          >
+            <span aria-hidden>{isPlaying ? '⏸' : '▶'}</span>
+            <span>{isPlaying ? '중지' : '재생'}</span>
+          </button>
           <TripActionMenu onEdit={onEdit} onDelete={onDelete} />
         </div>
       </div>

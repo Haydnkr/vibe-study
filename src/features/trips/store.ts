@@ -40,6 +40,11 @@ interface TravelMapState {
   // Bulk (for Import)
   replaceAll: (snapshot: { trips: Trip[]; categories: Category[] }) => void;
 
+  // Playback
+  playingTripId: string | undefined;
+  startPlayback: (tripId: string) => void;
+  stopPlayback: () => void;
+
   // Hydration
   _markHydrated: () => void;
 }
@@ -72,6 +77,10 @@ const storeCreator: StateCreator<
       selectedTripId: undefined,
       filterTransports: [...TRANSPORTS],
       hydrated: false,
+      playingTripId: undefined,
+
+      startPlayback: (tripId: string) => set({ playingTripId: tripId }),
+      stopPlayback: () => set({ playingTripId: undefined }),
 
       createTrip: (title: string) => {
         const id = genId();
