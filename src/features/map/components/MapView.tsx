@@ -19,21 +19,20 @@ const DEFAULT_ZOOM = 3;
 /**
  * Tile source policy:
  *  - If NEXT_PUBLIC_MAPTILER_KEY is set → MapTiler with Korean labels worldwide
- *  - Otherwise → Wikimedia `osm-intl` tiles, which use international (English)
- *    labels worldwide. No API key required.
+ *  - Otherwise → CartoDB Positron (English labels worldwide, free, no key)
  *
- * To enable Korean tiles:
- *  1. Get a free key at https://www.maptiler.com/cloud/ (100k req/month free)
- *  2. Set NEXT_PUBLIC_MAPTILER_KEY in .env.local locally and in Vercel
- *     Project Settings → Environment Variables.
+ * Note: Wikimedia `osm-intl` was tried but their service blocks/rate-limits
+ * cross-origin requests. CartoDB serves these tiles freely under the
+ * CC-BY-3.0 license for OSM data.
  */
 const MAPTILER_KEY = process.env.NEXT_PUBLIC_MAPTILER_KEY;
 const TILE_URL = MAPTILER_KEY
   ? `https://api.maptiler.com/maps/streets-v2/{z}/{x}/{y}.png?key=${MAPTILER_KEY}&language=ko`
-  : 'https://maps.wikimedia.org/osm-intl/{z}/{x}/{y}.png';
+  : 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
+const TILE_SUBDOMAINS = MAPTILER_KEY ? undefined : ['a', 'b', 'c', 'd'];
 const TILE_ATTRIBUTION = MAPTILER_KEY
   ? '© <a href="https://www.maptiler.com/copyright/">MapTiler</a> © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>'
-  : '<a href="https://wikimediafoundation.org/wiki/Maps_Terms_of_Use">Wikimedia maps</a> | © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors';
+  : '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors © <a href="https://carto.com/attributions">CARTO</a>';
 
 export default function MapView() {
   // Subscribe only to primitive slices — they are stable references from the
@@ -73,7 +72,12 @@ export default function MapView() {
       className="h-full w-full"
       style={{ background: '#f1f5f9' }}
     >
-      <TileLayer attribution={TILE_ATTRIBUTION} url={TILE_URL} />
+      <TileLayer
+        attribution={TILE_ATTRIBUTION}
+        url={TILE_URL}
+        {...(TILE_SUBDOMAINS ? { subdomains: TILE_SUBDOMAINS } : {})}
+        maxZoom={19}
+      />
 
       <BoundsFitter bounds={bounds} />
 
