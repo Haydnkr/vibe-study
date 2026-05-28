@@ -23,3 +23,23 @@ export const TRANSPORTS: Transport[] = ['plane', 'train', 'car', 'bus', 'ship', 
 
 /** Fallback polyline color when Trip has no Category. */
 export const NEUTRAL_COLOR = '#888888';
+
+/**
+ * Transport signature colors per DESIGN.md.
+ *
+ * Used in **sidebar context only** (LegCard left border, TransportFilter
+ * active chip). Map polyline color comes from the owning Trip's Category —
+ * see categorization spec and selectVisibleLegs().
+ *
+ * Splitting color routing by context:
+ *   - Map (Trip-level view):    color = Category   (group identity)
+ *   - Sidebar (Leg-level view): color = Transport  (mode identity per leg)
+ */
+export const TRANSPORT_COLORS: Record<Transport, string> = {
+  plane: '#2563eb',
+  train: '#16a34a',
+  car: '#d97706',
+  bus: '#dc2626',
+  ship: '#0891b2',
+  walk: '#6b7280',
+};

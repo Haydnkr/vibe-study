@@ -1,29 +1,32 @@
 import type { Leg } from '@/features/trips/types';
-import { NEUTRAL_COLOR, TRANSPORT_STYLE } from '@/lib/transport';
+import { TRANSPORT_COLORS, TRANSPORT_STYLE } from '@/lib/transport';
 import { formatLocal } from '@/lib/timezone';
 
 interface Props {
   leg: Leg;
-  /** Owning Trip's Category color, if any. Falls back to neutral. */
+  /** Unused on LegCard — kept for backward compat. Sidebar uses transport color. */
   accentColor?: string;
 }
 
-export default function LegCard({ leg, accentColor }: Props) {
+export default function LegCard({ leg }: Props) {
   const style = TRANSPORT_STYLE[leg.transport];
-  const color = accentColor ?? NEUTRAL_COLOR;
+  // Sidebar leg-level identity = transport color (per DESIGN.md, hybrid policy)
+  const transportColor = TRANSPORT_COLORS[leg.transport];
 
   return (
     <article
-      className="rounded-md border border-hairline bg-canvas p-3 border-l-[3px]"
-      style={{ borderLeftColor: color }}
+      className="rounded-md border border-hairline bg-canvas p-3 border-l-[3px] transition-colors hover:bg-surface-soft"
+      style={{ borderLeftColor: transportColor }}
     >
       <div className="flex items-center gap-2 text-sm text-body">
-        <span aria-hidden>{style.icon}</span>
-        <span className="text-ink">
-          {leg.from.name} → {leg.to.name}
+        <span aria-hidden className="text-base">{style.icon}</span>
+        <span className="text-ink font-medium">
+          {leg.from.name}
+          <span className="mx-1 text-muted">→</span>
+          {leg.to.name}
         </span>
       </div>
-      <div className="mt-1 text-[13px] text-muted">
+      <div className="mt-1 text-[13px] text-muted tabular-nums">
         {formatLocal(leg.departedAt, leg.from, { dateOnly: true })}
       </div>
     </article>
