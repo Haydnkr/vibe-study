@@ -138,3 +138,38 @@ travel-map/
 - 대용량 파일 업로드
 - 다중 외부 API 연동
 - 복잡한 관리자 권한
+
+---
+
+## 부록. Session 3 OpenSpec 트랙 갱신 (2026-05-28)
+
+본 ARCHITECTURE 작성 이후 `openspec-driven-dev` 브랜치에서 다음 구조 변경이 반영되었다. 자세한 결정 근거는 `openspec/changes/archive/2026-05-28-clarify-mvp-requirements/design.md` 참조.
+
+### 신규 엔터티: Category
+
+```ts
+interface Category {
+  id: string;        // UUID
+  name: string;      // 사용자 지정 (예: "휴가", "출장")
+  color: string;     // hex (예: "#ef4444")
+}
+```
+
+Trip이 0개 또는 1개의 Category를 참조한다 (`Trip.categoryId?`). store에 top-level `categories: Category[]` 배열로 보관.
+
+### 시각 채널 분리 정책
+
+폴리라인·사이드바 강조 색은 **Trip의 Category 색만 따른다**. Category 없으면 `NEUTRAL_COLOR` (`#888888`) 폴백. 교통수단(Transport)은 색 채널에 영향을 주지 않으며 **아이콘 + dash 패턴 + 굵기**로만 시각 구분된다 (`src/lib/transport.ts` `TRANSPORT_STYLE`에서 `color` 키 제거됨).
+
+### 시각 저장·표시 정책
+
+`Leg.departedAt`/`arrivedAt`은 **UTC ISO 8601 고정 저장**. 표시·입력은 출발/도착지 도시의 IANA 시간대로 변환 (`src/lib/timezone.ts` `formatLocal`/`localToUtc`). `City.timezone`은 옵셔널이며 누락 시 `lat`/`lng`로 `tz-lookup`을 통해 자동 채워진다 (`ingestCity`).
+
+### 데이터 모델 차이 (요약)
+
+```ts
+interface Trip { ...; categoryId?: string; tags?: string[]; }   // categoryId, tags 추가
+interface City { ...; timezone?: string; }                       // timezone 추가
+```
+
+`tz-lookup` 의존성 추가 (~80KB, 정적 export 1회 다운로드).

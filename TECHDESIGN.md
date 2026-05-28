@@ -289,3 +289,83 @@ export default nextConfig;
 - 2회차: [DELIVERYPLAN.md §3~6](DELIVERYPLAN.md) — 공통 베이스(route · shell · types · placeholder)
 - 3회차: [DELIVERYPLAN.md §7~9](DELIVERYPLAN.md) — 핵심 기능(Leg CRUD · 지도 · 필터 · Export/Import)
 - 4회차: [DELIVERYPLAN.md §10](DELIVERYPLAN.md) — E2E 테스트 · 리팩토링 · 배포
+
+---
+
+## 부록. Session 3 OpenSpec 트랙 기술 세부 (2026-05-28)
+
+### 의존성 추가
+
+| 패키지 | 버전 | 용도 |
+|---|---|---|
+| `zustand` | 5 | 글로벌 상태 + `persist` 미들웨어 |
+| `leaflet` | 1.9.4 | 지도 렌더링 |
+| `react-leaflet` | ^4.2.1 | React 18 호환 (v5는 React 19 요구) |
+| `@types/leaflet` | latest | 타입 정의 |
+| `tz-lookup` | ^6 | `(lat, lng) → IANA timezone` (오프라인, ~80KB) |
+
+### Store 구조 (`src/features/trips/store.ts`)
+
+Zustand `create()` + `persist` 미들웨어 + `StateCreator` 명시 타입.
+
+```ts
+interface TravelMapState {
+  trips: Trip[];                  // persisted
+  categories: Category[];         // persisted
+  selectedTripId: string | undefined;  // persisted
+  filterTransports: Transport[];  // persisted, default = TRANSPORTS
+  hydrated: boolean;              // not persisted
+
+  // 25 actions: createTrip / updateTripTitle / updateTripTags /
+  // setTripCategory / reorderLegs / deleteTrip(cascade) /
+  // addLeg / updateLeg / deleteLeg /
+  // createCategory / updateCategory / deleteCategory(cleanup) /
+  // selectTrip / toggleFilterTransport(min1) / resetFilter / replaceAll / ...
+}
+```
+
+`onRehydrateStorage` 후처리에서 모든 City를 `ingestCity` 로 통과시켜 누락된 `timezone`을 보강한다.
+
+### Selector 패턴
+
+UI에 데이터 가공 로직이 새지 않도록 store에 selector를 집중:
+
+| Selector | 용도 |
+|---|---|
+| `selectTripById` · `selectCategoryById` | 단건 조회 |
+| `selectTripAccentColor(state, tripId)` | Trip → Category 색 (없으면 NEUTRAL) |
+| `selectCityVisits(trips, filter?)` | `(name+country)` 단위 visit 집계 (마커용) |
+| `selectVisibleLegs(trips, categories, filter?)` | 색 사전 해석 + 평탄화된 Leg 배열 (폴리라인용) |
+| `selectTripBoundPoints(trips, tripId?)` | bounds fitting용 `[lat,lng][]` |
+
+slice를 직접 받도록 설계해 `useMemo` 의존성이 정직하게 잡힘 (lint clean).
+
+### 시간 처리 헬퍼 (`src/lib/timezone.ts`)
+
+```ts
+deriveTimezone(lat, lng): string             // tz-lookup wrapper, "UTC" fallback
+resolveTimezone(city): string                 // city.timezone ?? derive
+ingestCity(city): City                        // 누락 보강 (멱등)
+localToUtc(localISO, ianaTz): string          // datetime-local 값을 UTC ISO로
+formatLocal(utcISO, city, opts): string       // Intl.DateTimeFormat (DST 자동)
+tzAbbreviation(ianaTz, at?): string           // "KST", "CEST" 등
+```
+
+### Static Export + Leaflet 호환성
+
+- `MapView`는 `next/dynamic` + `ssr: false`로 import (기존 제약 그대로)
+- Leaflet 기본 마커 아이콘 URL 번들 이슈 회피 위해 `DivIcon`(흰 점 + 짙은 테두리) 사용
+- OSM 타일은 클라이언트에서 직접 fetch → 정적 export에서도 문제 없음
+
+### Import 검증 파이프라인 (`src/lib/storage.ts`)
+
+```
+JSON.parse → 루트 객체 형식 → schemaVersion 확인 →
+trips/categories 배열 형식 → per-entity validators
+(Trip / Leg / City / Category)
+   ↓ 어느 단계든 실패 → atomic reject (오류 메시지 + 경로) + 기존 데이터 보존
+   ↓ 통과
+post-process: 모든 City에 ingestCity 적용 (timezone 보강) → store.replaceAll
+```
+
+검증 라이브러리(Zod) 없이 ~250라인 수동 검증으로 처리.

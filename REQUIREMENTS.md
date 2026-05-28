@@ -122,6 +122,21 @@
 | FR-008 | 사용자는 교통수단별로 지도 경로를 필터링할 수 있다 | Should |
 | FR-009 | 마커 클릭 시 도시명·국가·방문 일시가 팝업으로 표시된다 | Should |
 | FR-010 | 사용자는 Leg에 메모(note)를 선택적으로 남길 수 있다 | Nice |
+| FR-011 | 사용자는 Trip의 제목을 수정할 수 있다 | Must |
+| FR-012 | 사용자는 Trip을 삭제할 수 있으며, 삭제 시 포함된 모든 Leg가 함께 삭제된다 (cascade) | Must |
+| FR-013 | Leg 시각(`departedAt`/`arrivedAt`)은 UTC ISO 8601로 저장하고, 표시 시 출발/도착지 도시의 IANA 시간대로 변환한다 | Must |
+| FR-014 | 도시 데이터는 `lat`/`lng` 기반으로 IANA 시간대를 자동 결정하여 `City.timezone` 필드에 보관한다 (`tz-lookup`) | Must |
+| FR-015 | 사용자는 Trip 메타(태그)·Leg 순서를 수정할 수 있다 | Should |
+| FR-016 | 같은 도시(`name`+`country`)를 여러 번 방문한 경우, 지도에는 마커 1개로 표시하고 팝업에 모든 방문 일시를 시간 순으로 나열한다 | Should |
+| FR-017 | 교통수단 필터는 최소 1개 체크 유지를 강제하며, 마지막 1개는 해제할 수 없다 | Must |
+| FR-018 | Import 시 형식·필드·값 범위 검증을 수행하고, 하나라도 invalid 시 원자적으로 거부한다 | Must |
+| FR-019 | 사용자는 Trip에 1개의 Category(이름·색)를 선택할 수 있다 (옵셔널) | Should |
+| FR-020 | 사용자는 Category를 추가/수정/삭제할 수 있다 | Should |
+| FR-021 | 폴리라인 색은 소속 Trip의 Category 색을 따른다 (Category 없으면 중립 회색 `#888888`) | Must |
+| FR-022 | 교통수단(Transport)은 폴리라인 dash 패턴/굵기 + 마커 아이콘으로만 시각 구분하며 색 채널은 사용하지 않는다 | Must |
+| FR-023 | Category 삭제 시 참조 Trip의 `categoryId`는 `undefined`로 설정되고 Trip 자체는 보존된다 | Must |
+
+> FR-011~FR-023, AC-008~AC-017은 Session 3 explore에서 도출된 `clarify-mvp-requirements` change에서 정의되었으며 `openspec/specs/`로 아카이브됨.
 
 ---
 
@@ -197,6 +212,86 @@ When   페이지를 새로고침하면
 Then   변경 사항이 그대로 유지된다
 ```
 
+### AC-008. Trip 제목 수정
+
+```
+Given  TripList 카드의 ⋮ 메뉴가 열려 있을 때
+When   [편집] 선택 → 제목 변경 → 저장
+Then   사이드바와 헤더의 Trip 제목이 즉시 새 값으로 갱신된다
+```
+
+### AC-009. Trip cascade 삭제
+
+```
+Given  Leg N개를 가진 Trip이 있을 때
+When   ⋮ → [삭제] → "Leg N개도 함께 삭제됩니다" 다이얼로그 → 확인
+Then   Trip과 N개 Leg가 store에서 모두 제거되고 지도가 갱신된다
+```
+
+### AC-010. 도시 TZ 기반 시각 표시
+
+```
+Given  ICN(Asia/Seoul) → CDG(Europe/Paris) Leg가 departedAt="…01:00:00Z", arrivedAt="…11:30:00Z" 일 때
+When   LegCard 또는 마커 팝업이 렌더되면
+Then   "ICN 10:00 (KST) → CDG 13:30 (CEST)" 형태로 각 도시 현지시간으로 표시된다
+```
+
+### AC-011. 구버전 JSON 마이그레이션
+
+```
+Given  City.timezone 필드가 없는 구버전 JSON 파일이 있을 때
+When   Import 후처리 단계가 실행되면
+Then   각 City에 lat/lng 으로부터 도출한 IANA 시간대가 자동으로 채워진다
+```
+
+### AC-012. 다중 방문 마커
+
+```
+Given  Paris를 3개 Leg에서 사용했을 때
+When   사용자가 Paris 마커를 클릭하면
+Then   팝업에 "Paris, France" 헤더와 3개의 방문 항목(transport 아이콘 + 현지시간)이 시간 순으로 표시된다
+```
+
+### AC-013. 필터 최소 1개 강제
+
+```
+Given  체크된 transport가 정확히 1개일 때
+When   사용자가 그 체크박스를 해제하려 하면
+Then   체크박스는 비활성화 상태이며 해제되지 않는다. 안내 툴팁이 표시된다
+```
+
+### AC-014. Import 원자적 거부
+
+```
+Given  Trip 100개 중 1개의 transport 필드가 invalid한 JSON 파일이 있을 때
+When   사용자가 Import 하면
+Then   99개도 import 되지 않고 기존 store 상태가 그대로 유지된다. 오류 메시지에 실패 위치와 이유가 표시된다
+```
+
+### AC-015. Category 색이 폴리라인에 적용
+
+```
+Given  Trip이 "휴가" Category(#ff0000)를 가질 때
+When   해당 Trip의 Leg가 지도에 렌더되면
+Then   모든 폴리라인이 #ff0000 색으로 그려진다 (transport는 dash 패턴으로만 구분)
+```
+
+### AC-016. Category 없는 Trip 폴백 색
+
+```
+Given  Trip의 categoryId가 undefined일 때
+When   지도가 렌더되면
+Then   해당 Trip의 폴리라인은 중립 회색(#888888)으로 그려진다
+```
+
+### AC-017. Category 삭제 시 참조 Trip 보존
+
+```
+Given  "휴가" Category를 참조하는 Trip 2개가 있을 때
+When   사용자가 "휴가" Category를 삭제하면
+Then   두 Trip은 보존되며 categoryId가 undefined가 되고 폴리라인 색이 #888888로 폴백된다
+```
+
 ---
 
 ## 6. Requirement Traceability Lite
@@ -213,3 +308,16 @@ Then   변경 사항이 그대로 유지된다
 | FR-008 | UC-005 | AC-005 | E2E: filter by transport type |
 | FR-009 | UC-003 | AC-003 | E2E: click marker → popup visible |
 | FR-010 | UC-002 | AC-002 | Unit: optional note field |
+| FR-011 | — | AC-008 | E2E: edit Trip title |
+| FR-012 | — | AC-009 | E2E: delete Trip cascade |
+| FR-013 | — | AC-010 | Unit: utc↔local TZ conversion |
+| FR-014 | — | AC-011 | Unit: tz-lookup backfill, E2E: legacy import |
+| FR-015 | — | AC-008 | E2E: tag edit |
+| FR-016 | — | AC-012 | E2E: multi-visit marker popup |
+| FR-017 | — | AC-013 | E2E: last-checkbox disabled |
+| FR-018 | — | AC-014 | E2E: invalid JSON atomic rejection |
+| FR-019 | — | AC-015 | E2E: assign Category, polyline color |
+| FR-020 | — | AC-015 | E2E: Category CRUD |
+| FR-021 | — | AC-015, AC-016 | E2E: polyline color source |
+| FR-022 | — | AC-015 | Unit: TRANSPORT_STYLE has no `color` field |
+| FR-023 | — | AC-017 | E2E: delete Category preserves Trip |

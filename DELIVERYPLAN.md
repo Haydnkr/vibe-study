@@ -309,3 +309,46 @@ git commit -m "session-3b: implement core features from OpenSpec design"
 * [ ] placeholder 컴포넌트 생성 (MapView · LegForm · TripList · LegCard · TripCreateDialog · TransportFilter · EmptyState)
 * [ ] `npm run dev` + `npm run build` 오류 없음 확인
 * [ ] Git commit / push 완료
+
+---
+
+## 19. Session 3 결과 — OpenSpec 트랙 (2026-05-28)
+
+`openspec-driven-dev` 브랜치에서 다음이 적용되었다 (커밋 `cdf7e75` → `9c3e558` → §7 wrap):
+
+### 캡처된 결정 (clarify-mvp-requirements change → archived)
+
+6개 capability spec이 `openspec/specs/`로 promote됨:
+- `trip-management` · `categorization` · `temporal-model` · `map-visualization` · `transport-filter` · `data-portability`
+
+### 구현된 기능 (FR 매핑)
+
+| 영역 | FR | 상태 |
+|---|---|---|
+| Trip CRUD + cascade | FR-001, FR-002, FR-005, FR-011, FR-012, FR-015 | ✓ |
+| Trip ⋮ 메뉴 + 편집 다이얼로그 + 삭제 확인 | FR-011, FR-012 | ✓ |
+| Category 엔터티 (UUID + name + color) | FR-019, FR-020 | ✓ |
+| 폴리라인 색 = Category, 패턴 = Transport | FR-021, FR-022 | ✓ |
+| Category 삭제 시 Trip 보존 | FR-023 | ✓ |
+| UTC 저장 + 도시 TZ 표시 (`tz-lookup`) | FR-013, FR-014 | ✓ |
+| Nominatim 도시 검색 300ms 디바운스 | FR-003 | ✓ |
+| 실 Leaflet 지도 + 폴리라인 + 다중방문 마커 | FR-004, FR-009, FR-016 | ✓ |
+| 교통수단 필터 최소 1개 강제 | FR-008, FR-017 | ✓ |
+| JSON Export · Import 3단 검증 · 원자적 거부 · timezone 마이그레이션 | FR-006, FR-018 | ✓ |
+| localStorage persist + hydration backfill | FR-007 | ✓ |
+| 메모(note) 입력/표시 | FR-010 | ✓ |
+
+### 추가 의존성
+
+`zustand` · `leaflet` · `react-leaflet@^4` · `@types/leaflet` · `tz-lookup`
+
+### 후속 라운드 (deferred)
+
+- §6.5 Leg 드래그 재배치 (의존성 비용 vs MVP scope)
+- 모바일 320px 레이아웃 분기 (NFR-001)
+- Category 색 대비비 검증 (NFR 후속)
+- §9 일부 AC 자동화 E2E (4회차 Playwright)
+
+### 비교 실험 노트
+
+`md-driven-dev` vs `openspec-driven-dev` 비교는 `COMPARISON.md`에 별도 정리.

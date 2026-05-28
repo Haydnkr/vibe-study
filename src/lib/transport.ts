@@ -1,15 +1,45 @@
 import type { Transport } from '@/features/trips/types';
 
+/**
+ * Transport visual style.
+ *
+ * NOTE: Color is intentionally NOT part of transport style.
+ * Polyline color comes from the owning Trip's Category (see categorization spec).
+ * Transport is distinguished only by icon + dash pattern + weight.
+ */
 export const TRANSPORT_STYLE: Record<
   Transport,
-  { color: string; dash?: string; label: string; icon: string }
+  { dash?: string; weight: number; label: string; icon: string }
 > = {
-  plane: { color: '#2563eb', dash: '8 4', label: '항공', icon: '✈️' },
-  train: { color: '#16a34a', label: '기차', icon: '🚆' },
-  car: { color: '#d97706', label: '자동차', icon: '🚗' },
-  bus: { color: '#dc2626', label: '버스', icon: '🚌' },
-  ship: { color: '#0891b2', dash: '6 3', label: '선박', icon: '🚢' },
-  walk: { color: '#6b7280', dash: '3 3', label: '도보', icon: '🚶' },
+  plane: { dash: '8 4', weight: 3, label: '항공', icon: '✈️' },
+  train: { weight: 3, label: '기차', icon: '🚆' },
+  car: { weight: 3, label: '자동차', icon: '🚗' },
+  bus: { weight: 3, label: '버스', icon: '🚌' },
+  ship: { dash: '6 3', weight: 3, label: '선박', icon: '🚢' },
+  walk: { dash: '3 3', weight: 2, label: '도보', icon: '🚶' },
 };
 
 export const TRANSPORTS: Transport[] = ['plane', 'train', 'car', 'bus', 'ship', 'walk'];
+
+/** Fallback polyline color when Trip has no Category. */
+export const NEUTRAL_COLOR = '#888888';
+
+/**
+ * Transport signature colors per DESIGN.md.
+ *
+ * Used in **sidebar context only** (LegCard left border, TransportFilter
+ * active chip). Map polyline color comes from the owning Trip's Category —
+ * see categorization spec and selectVisibleLegs().
+ *
+ * Splitting color routing by context:
+ *   - Map (Trip-level view):    color = Category   (group identity)
+ *   - Sidebar (Leg-level view): color = Transport  (mode identity per leg)
+ */
+export const TRANSPORT_COLORS: Record<Transport, string> = {
+  plane: '#2563eb',
+  train: '#16a34a',
+  car: '#d97706',
+  bus: '#dc2626',
+  ship: '#0891b2',
+  walk: '#6b7280',
+};
