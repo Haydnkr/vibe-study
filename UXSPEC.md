@@ -175,3 +175,64 @@
 - 주요 영역은 heading 구조를 가진다: `<h1>` Travel Map → `<h2>` 여행 제목 → `<h3>` Leg 구간
 - 모달·다이얼로그 열릴 때 포커스가 해당 요소로 이동하고, 닫힐 때 트리거 버튼으로 복귀한다.
 - 키보드만으로 Leg 추가·수정·삭제·필터 변경이 가능해야 한다.
+
+---
+
+## 부록. Session 3 OpenSpec 트랙 UX 갱신 (2026-05-28)
+
+### 헤더 진입점 (AppHeader)
+
+| 버튼 | 기능 | 동작 |
+|---|---|---|
+| **카테고리** | Category 관리 다이얼로그 | name + HTML5 color picker, 인라인 편집/삭제 |
+| **Import** | JSON 가져오기 | 파일 선택 → 검증 → "기존 데이터를 덮어쓸까요?" 확인 다이얼로그 → 토스트 |
+| **Export** | JSON 내보내기 | `travel-map-YYYY-MM-DD.json` 자동 다운로드 + 토스트 |
+| **+ 여행** | TripCreateDialog | 제목 입력 → 저장 → 자동 선택 |
+
+성공/실패 안내는 우상단 토스트로 4.5초간 표시 (`role="status"`, `aria-live="polite"`).
+
+### Trip ⋮ 메뉴 (TripList 카드)
+
+각 Trip 카드 우측에 `⋮` 트리거. 클릭하면 popover에 다음 두 항목:
+- **편집** → `TripEditDialog` (제목 · 태그 쉼표 구분 · Category 선택)
+- **삭제** → `TripDeleteConfirm` ("이 여행의 Leg N개도 함께 삭제됩니다")
+
+popover는 외부 클릭·ESC로 닫힌다 (focus trap).
+
+### Trip 카드 색상
+
+좌측 띠 4px가 Trip의 Category 색을 사용. Category 없으면 `#888888`. 사용자가 Category를 부여하면 즉시 띠 색 + 지도 폴리라인 색이 동시 갱신된다.
+
+### LegForm TZ 안내
+
+도시(`from`/`to`) 선택 시 입력 필드 아래에 `ⓘ Europe/Paris, CEST 현지시간으로 입력` 형태의 헬퍼 텍스트가 노출된다. 사용자가 datetime-local 컨트롤에 입력한 wall-clock 값이 그 도시의 현지시간으로 해석됨을 명확히 안내.
+
+### 교통수단 필터 비활성화 안내
+
+체크된 transport가 1개일 때 그 마지막 체크박스는 disabled. 라벨에 `title` 속성으로 "최소 1개 교통수단을 선택해야 합니다" 툴팁을 노출. 시각적으로 opacity 60%, cursor `not-allowed`.
+
+### 마커 팝업 콘텐츠 (다중 방문 N회)
+
+```
+Paris  France
+─────────────────────────────
+✈️ 2026. 08. 01. 13:30 (CEST) (도착)
+🚆 2026. 08. 05. 08:00 (CEST) (출발)
+🚌 2026. 08. 08. 15:00 (CEST) (도착)
+```
+
+- 헤더: 도시명 + 국가 (작은 회색)
+- 각 visit: transport 아이콘 + 도시 현지시간 (TZ 라벨 동반) + 출발/도착 kind
+- 시간 순 정렬
+
+### Import 확인 다이얼로그
+
+```
+기존 데이터를 덮어쓸까요?
+현재 store는 Trip 1개 · Category 2개 상태입니다.
+Import 파일은 Trip 1개 · Category 1개로 완전히 교체됩니다.
+병합하지 않습니다. 이 작업은 되돌릴 수 없습니다.
+[취소]  [덮어쓰기]
+```
+
+병합이 아닌 **완전 교체**임을 명시. 취소 버튼이 좌측, 위험 액션이 우측.
