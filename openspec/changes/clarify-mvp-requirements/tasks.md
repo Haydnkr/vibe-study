@@ -1,20 +1,20 @@
 ## 1. 사전 정비 (의존성 / 모델 / 제약문)
 
-- [ ] 1.1 `tz-lookup` 의존성 추가 (`npm install tz-lookup`)
-- [ ] 1.2 검증 라이브러리 결정 (Zod 도입 vs 수동 검증) — OQ3 해소
-- [ ] 1.3 `src/features/trips/types.ts` 갱신 — `Trip.categoryId?`, `Trip.tags?` 추가, `City.timezone?` 추가, `Category { id, name, color }` 신설
-- [ ] 1.4 `src/lib/transport.ts` — `TRANSPORT_STYLE`에서 `color` 필드 삭제 (icon, dashArray, weight 유지)
-- [ ] 1.5 `CLAUDE.md` 색 정책 제약문 갱신 — "색은 Category에서 결정, transport는 아이콘·dash·굵기만"
+- [x] 1.1 `tz-lookup` 의존성 추가 (`npm install tz-lookup`)
+- [x] 1.2 검증 라이브러리 결정 — **수동 검증** 채택 (MVP scope, 의존성 최소화). OQ3 해소.
+- [x] 1.3 `src/features/trips/types.ts` 갱신 — `Trip.categoryId?`, `Trip.tags?` 추가, `City.timezone?` 추가, `Category { id, name, color }` 신설
+- [x] 1.4 `src/lib/transport.ts` — `TRANSPORT_STYLE`에서 `color` 필드 삭제 (icon, dashArray, weight 유지). `NEUTRAL_COLOR` 상수 추가.
+- [x] 1.5 `CLAUDE.md` 색 정책 제약문 갱신 — "색은 Category에서 결정, transport는 아이콘·dash·굵기만" + 시각 저장·표시 정책 추가
 
 ## 2. temporal-model 구현
 
-- [ ] 2.1 `src/lib/timezone.ts` 신설 — `deriveTimezone(lat, lng)` 헬퍼 (tz-lookup wrapper)
-- [ ] 2.2 `localToUtc(localISO, ianaTz)` / `utcToLocal(utcISO, ianaTz)` 헬퍼 작성
-- [ ] 2.3 `ingestCity(c)` 헬퍼 — City 진입점에서 timezone 보강. store action들이 통과
-- [ ] 2.4 `LegForm.tsx` — 도시 선택 후 TZ 라벨(예: "Europe/Paris, CEST") 표시
-- [ ] 2.5 `LegForm.tsx` 저장 핸들러 — 입력값을 city.timezone 기준으로 UTC 변환
-- [ ] 2.6 `LegCard.tsx` 표시 — `utcToLocal`로 출발/도착을 각 도시 TZ에 맞춰 렌더
-- [ ] 2.7 store 하이드레이션 후처리 — 모든 City를 순회하여 timezone 누락 시 보강
+- [x] 2.1 `src/lib/timezone.ts` 신설 — `deriveTimezone(lat, lng)` 헬퍼 (tz-lookup wrapper)
+- [x] 2.2 `localToUtc(localISO, ianaTz)` / `formatLocal(utcISO, city, opts)` 헬퍼 작성. `tzAbbreviation` 보너스 헬퍼 추가
+- [x] 2.3 `ingestCity(c)` 헬퍼 — City 진입점에서 timezone 보강. `resolveTimezone` 지연 폴백 헬퍼 동반
+- [ ] 2.4 `LegForm.tsx` — 도시 선택 후 TZ 라벨(예: "Europe/Paris, CEST") 표시 **[BLOCKED: LegForm 아직 placeholder. §6.4 Trip 편집 화면 작업 시 함께 진행]**
+- [ ] 2.5 `LegForm.tsx` 저장 핸들러 — 입력값을 city.timezone 기준으로 UTC 변환 **[BLOCKED: 동일 — §6.4와 함께]**
+- [x] 2.6 `LegCard.tsx` 표시 — `formatLocal`로 출발/도착을 각 도시 TZ에 맞춰 렌더. accentColor prop 노출 (값 주입은 §3 trip context 연결 시)
+- [ ] 2.7 store 하이드레이션 후처리 — 모든 City를 순회하여 timezone 누락 시 보강 **[BLOCKED: `src/features/trips/store.ts` 미존재. §3.1과 함께 진행]**
 
 ## 3. categorization 구현
 

@@ -44,7 +44,9 @@ const MapView = dynamic(() => import('@/features/map/components/MapView'), { ssr
 
 **Nominatim rate limit** — `geocode.ts` 호출은 300ms 디바운스 필수. `User-Agent: travel-map-mvp/1.0` 헤더 포함.
 
-**교통수단 스타일** — 색상·아이콘·dash 패턴은 `src/lib/transport.ts`의 `TRANSPORT_STYLE` 상수에서만 참조. 인라인으로 중복 정의하지 않는다.
+**시각 채널 분리** — 폴리라인·사이드바 강조 색은 **Trip의 Category 색**에서만 결정한다 (`src/features/trips/store.ts`의 `categories`). Category가 없는 Trip은 `NEUTRAL_COLOR`(`#888888`) 폴백. 교통수단(Transport)은 색 채널에 영향을 주지 않으며, 아이콘·dash 패턴·굵기만 `src/lib/transport.ts`의 `TRANSPORT_STYLE`에서 참조한다.
+
+**시각 저장·표시** — `Leg.departedAt`/`arrivedAt`은 항상 UTC ISO 8601로 저장한다. 표시·입력은 출발지/도착지 도시의 IANA 시간대 기준이며 `src/lib/timezone.ts`의 `formatLocal`/`localToUtc` 헬퍼를 사용한다. `City.timezone`은 옵셔널이고 누락 시 `ingestCity`가 `lat`/`lng`로 자동 채운다 (`tz-lookup`).
 
 ## Data Model
 
