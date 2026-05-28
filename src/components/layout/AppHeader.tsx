@@ -122,7 +122,7 @@ export default function AppHeader({ onCreateTrip, onOpenCategoryManager }: Props
         <div
           role="status"
           aria-live="polite"
-          className={`fixed top-16 right-4 z-[60] max-w-md rounded-lg px-4 py-3 text-sm shadow-lg ${
+          className={`fixed top-16 right-4 z-[9999] max-w-md rounded-lg px-4 py-3 text-sm shadow-lg ${
             notice.kind === 'ok' ? 'bg-ink text-white' : 'bg-red-600 text-white'
           }`}
         >
@@ -135,7 +135,7 @@ export default function AppHeader({ onCreateTrip, onOpenCategoryManager }: Props
           role="dialog"
           aria-modal="true"
           aria-label="Import 확인"
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
         >
           <button
             type="button"

@@ -45,7 +45,7 @@ export default function Dialog({ open, onClose, label, children, maxWidth = 'max
       role="dialog"
       aria-modal="true"
       aria-label={label}
-      className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
     >
       <button
         type="button"
