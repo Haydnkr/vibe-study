@@ -14,13 +14,13 @@
 - [ ] 2.4 `LegForm.tsx` — 도시 선택 후 TZ 라벨(예: "Europe/Paris, CEST") 표시 **[BLOCKED: LegForm 아직 placeholder. §6.4 Trip 편집 화면 작업 시 함께 진행]**
 - [ ] 2.5 `LegForm.tsx` 저장 핸들러 — 입력값을 city.timezone 기준으로 UTC 변환 **[BLOCKED: 동일 — §6.4와 함께]**
 - [x] 2.6 `LegCard.tsx` 표시 — `formatLocal`로 출발/도착을 각 도시 TZ에 맞춰 렌더. accentColor prop 노출 (값 주입은 §3 trip context 연결 시)
-- [ ] 2.7 store 하이드레이션 후처리 — 모든 City를 순회하여 timezone 누락 시 보강 **[BLOCKED: `src/features/trips/store.ts` 미존재. §3.1과 함께 진행]**
+- [x] 2.7 store 하이드레이션 후처리 — `onRehydrateStorage`에서 모든 City를 ingestCity로 보강
 
 ## 3. categorization 구현
 
-- [ ] 3.1 `src/features/trips/store.ts` — `categories: Category[]` 배열 추가
-- [ ] 3.2 store actions: `createCategory`, `updateCategory`, `deleteCategory` (참조 Trip의 categoryId를 undefined로 정리)
-- [ ] 3.3 store actions: `setTripCategory(tripId, categoryId | undefined)`
+- [x] 3.1 `src/features/trips/store.ts` 신설 — Zustand persist, `categories: Category[]` 포함. zustand 의존성도 함께 추가
+- [x] 3.2 store actions: `createCategory`, `updateCategory`, `deleteCategory` (참조 Trip의 categoryId를 undefined로 정리)
+- [x] 3.3 store actions: `setTripCategory(tripId, categoryId | undefined)`
 - [ ] 3.4 Category 관리 UI 위치 결정 — 헤더 진입점 또는 Trip 편집 인라인 (OQ1)
 - [ ] 3.5 Category 관리 화면 컴포넌트 — 이름·색상(color picker) 입력, 목록 표시, 삭제
 - [ ] 3.6 Trip 편집 화면에 Category 선택 UI 추가 (드롭다운 또는 칩, 비우기 옵션 포함)
@@ -42,8 +42,8 @@
 
 ## 6. trip-management 구현
 
-- [ ] 6.1 store actions: `updateTripTitle(tripId, title)`, `updateTripTags(tripId, tags)`, `reorderLegs(tripId, newOrder)`
-- [ ] 6.2 store action: `deleteTrip(tripId)` — cascade로 legs도 함께 제거. 현재 선택 Trip이면 첫 Trip으로 전환, 0개면 selectedTripId=undefined
+- [x] 6.1 store actions: `createTrip`, `updateTripTitle`, `updateTripTags`, `setTripCategory`, `reorderLegs`, `addLeg`, `updateLeg`, `deleteLeg`
+- [x] 6.2 store action: `deleteTrip(tripId)` — cascade로 legs도 함께 제거. 선택 Trip이면 첫 Trip 자동 선택
 - [ ] 6.3 `TripList` 카드 — 우측 ⋮ 메뉴 (편집 / 삭제)
 - [ ] 6.4 Trip 편집 화면 — 제목 입력, 태그 입력, Category 선택 (3.6과 합쳐도 됨)
 - [ ] 6.5 Leg 드래그 재배치 (`@dnd-kit/sortable` 또는 HTML5 drag&drop) — store.reorderLegs 호출
