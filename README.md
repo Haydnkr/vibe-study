@@ -152,11 +152,11 @@ npm run lint     # ESLint
 
 | 브랜치 | 정책 |
 |---|---|
-| `main` | Session 2 baseline 유지 (비교 실험 무결성). 머지하지 않음. |
-| `md-driven-dev` | 동결. 비교 노트의 raw 산출물. |
-| `openspec-driven-dev` | 동결. 본 README의 실사용 가능 결과물. |
+| `main` | OpenSpec 트랙 결과물이 머지된 풀 기능 (production deploy 대상). |
+| `md-driven-dev` | 동결. MD-driven 비교 트랙의 raw 산출물. |
+| `openspec-driven-dev` | 동결. OpenSpec 트랙의 raw 산출물. |
 
-새 기능을 main에 통합하고 싶다면 `openspec-driven-dev` 를 main에 별도 PR로 머지하되, 그 시점에 비교 노트 (`COMPARISON.md`) 결과는 이미 보관된 상태이므로 머지 자유.
+비교 실험 결과(§15 기준)는 `COMPARISON.md`와 두 브랜치의 git history에 영구 보존되어 있다. main은 production deployable 상태로 운영하고, 향후 변경은 main 위에서 새 OpenSpec change를 통해 진행한다.
 
 ---
 
