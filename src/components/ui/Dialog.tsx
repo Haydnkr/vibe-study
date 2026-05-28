@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, type ReactNode } from 'react';
 
 interface Props {
   open: boolean;
@@ -16,11 +16,9 @@ interface Props {
  * Minimal modal dialog primitive.
  * - ESC closes
  * - Click outside (on backdrop) closes
- * - Focuses container on open
+ * - Initial focus is delegated to inner input's `autoFocus` (preserves IME)
  */
 export default function Dialog({ open, onClose, label, children, maxWidth = 'max-w-md' }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
@@ -30,8 +28,6 @@ export default function Dialog({ open, onClose, label, children, maxWidth = 'max
     // Lock body scroll
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
-    // Focus the container
-    containerRef.current?.focus();
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prevOverflow;
@@ -54,8 +50,6 @@ export default function Dialog({ open, onClose, label, children, maxWidth = 'max
         className="absolute inset-0 bg-black/40"
       />
       <div
-        ref={containerRef}
-        tabIndex={-1}
         className={`relative w-full ${maxWidth} rounded-xl bg-canvas shadow-xl outline-none`}
       >
         {children}
