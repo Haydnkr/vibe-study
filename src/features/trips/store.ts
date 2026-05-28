@@ -277,11 +277,16 @@ export interface VisitEntry {
   kind: 'arrive' | 'depart';
 }
 
-export function selectCityVisits(state: TravelMapState): Map<string, { city: City; visits: VisitEntry[] }> {
+export function selectCityVisits(
+  trips: Trip[],
+  filter?: Transport[]
+): Map<string, { city: City; visits: VisitEntry[] }> {
   const out = new Map<string, { city: City; visits: VisitEntry[] }>();
   const key = (c: City) => `${c.name} ${c.country}`;
-  for (const trip of state.trips) {
+  const allow = filter ? new Set(filter) : null;
+  for (const trip of trips) {
     for (const leg of trip.legs) {
+      if (allow && !allow.has(leg.transport)) continue;
       for (const role of ['from', 'to'] as const) {
         const city = leg[role];
         const k = key(city);
@@ -306,4 +311,58 @@ export function selectCityVisits(state: TravelMapState): Map<string, { city: Cit
     v.visits.sort((a: VisitEntry, b: VisitEntry) => a.at.localeCompare(b.at));
   });
   return out;
+}
+
+/**
+ * Flat list of currently-visible Legs with their resolved accent color.
+ * Each entry carries the owning Trip's Category color (or NEUTRAL fallback),
+ * so render sites don't need to look up trip/category separately.
+ */
+export interface VisibleLeg {
+  tripId: string;
+  leg: Leg;
+  color: string;
+}
+
+export function selectVisibleLegs(
+  trips: Trip[],
+  categories: Category[],
+  filter?: Transport[]
+): VisibleLeg[] {
+  const allow = filter ? new Set(filter) : null;
+  const colorByCatId = new Map<string, string>(
+    categories.map((c: Category) => [c.id, c.color])
+  );
+  const colorForTrip = (trip: Trip): string =>
+    trip.categoryId ? colorByCatId.get(trip.categoryId) ?? '#888888' : '#888888';
+  const out: VisibleLeg[] = [];
+  for (const trip of trips) {
+    const color = colorForTrip(trip);
+    for (const leg of trip.legs) {
+      if (allow && !allow.has(leg.transport)) continue;
+      out.push({ tripId: trip.id, leg, color });
+    }
+  }
+  return out;
+}
+
+/**
+ * Return all (lat, lng) points belonging to a Trip's Legs, suitable for
+ * fitting a map view to. Returns null if the Trip has no Legs.
+ * Caller is responsible for converting to L.LatLngBounds (keeps store
+ * decoupled from Leaflet).
+ */
+export function selectTripBoundPoints(
+  trips: Trip[],
+  tripId: string | undefined
+): [number, number][] | null {
+  if (!tripId) return null;
+  const trip = trips.find((t: Trip) => t.id === tripId);
+  if (!trip || trip.legs.length === 0) return null;
+  const points: [number, number][] = [];
+  for (const leg of trip.legs) {
+    points.push([leg.from.lat, leg.from.lng]);
+    points.push([leg.to.lat, leg.to.lng]);
+  }
+  return points.length > 0 ? points : null;
 }
