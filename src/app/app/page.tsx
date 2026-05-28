@@ -11,6 +11,7 @@ import TripEditDialog from '@/features/trips/components/TripEditDialog';
 import TripDeleteConfirm from '@/features/trips/components/TripDeleteConfirm';
 import CategoryManagerDialog from '@/features/trips/components/CategoryManagerDialog';
 import LegForm from '@/features/trips/components/LegForm';
+import PlaybackClockPanel from '@/features/trips/components/PlaybackClockPanel';
 import { useTravelMapStore } from '@/features/trips/store';
 import type { Trip } from '@/features/trips/types';
 
@@ -22,7 +23,9 @@ const MapView = dynamic(() => import('@/features/map/components/MapView'), {
 export default function AppPage() {
   const trips = useTravelMapStore((s) => s.trips);
   const selectedTripId = useTravelMapStore((s) => s.selectedTripId);
+  const playingTripId = useTravelMapStore((s) => s.playingTripId);
   const hasTrips = trips.length > 0;
+  const playingTrip = trips.find((t) => t.id === playingTripId);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined);
@@ -59,6 +62,7 @@ export default function AppPage() {
         </aside>
         <main className="relative flex-1 overflow-hidden">
           <MapView />
+          {playingTrip && <PlaybackClockPanel legs={playingTrip.legs} />}
           {!hasTrips && (
             <div className="absolute inset-0 flex items-center justify-center p-6">
               <div className="max-w-md w-full">
