@@ -71,3 +71,26 @@ test('유효하지 않은 JSON은 거부되고 기존 데이터가 유지된다'
   await expect(page.getByRole('dialog', { name: 'Import 확인' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: '유지될 여행' })).toBeVisible();
 });
+
+// ── 보안: Category color에 HTML 주입 시도하는 Import는 거부된다 ───
+// color는 일부 경로에서 HTML(divIcon)로 삽입되므로 안전한 색 형식만 허용.
+test('Category color에 HTML 주입 페이로드가 있으면 Import가 거부된다', async ({ page }) => {
+  await gotoApp(page);
+  await createTrip(page, '유지될 여행');
+
+  const xssJson = JSON.stringify({
+    schemaVersion: 1,
+    trips: [],
+    categories: [{ id: 'c1', name: '나쁨', color: 'red"></div><img src=x onerror=alert(1)>' }],
+  });
+
+  await page.locator('input[type="file"]').setInputFiles({
+    name: 'xss.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(xssJson),
+  });
+
+  await expect(page.getByText(/Import 거부/)).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Import 확인' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: '유지될 여행' })).toBeVisible();
+});

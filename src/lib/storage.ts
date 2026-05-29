@@ -161,6 +161,11 @@ function validateCategory(v: unknown, path: string): Validated<Category> {
   if (typeof v.id !== 'string' || !v.id) return fail(`${path}.id: 비어있지 않은 문자열 필요.`);
   if (typeof v.name !== 'string' || !v.name) return fail(`${path}.name: 비어있지 않은 문자열 필요.`);
   if (typeof v.color !== 'string' || !v.color) return fail(`${path}.color: 비어있지 않은 문자열 필요.`);
+  // color는 폴리라인/마커 렌더에 쓰이며 일부 경로(Leaflet divIcon)는 HTML 문자열로
+  // 삽입된다. Import는 신뢰 불가 경계이므로 안전한 CSS color 형식만 허용해 주입을 차단.
+  if (!isSafeColor(v.color)) {
+    return fail(`${path}.color: 허용되지 않는 색 형식 (hex 또는 rgb/hsl만 허용).`);
+  }
   return { ok: true, value: { id: v.id, name: v.name, color: v.color } };
 }
 
@@ -252,6 +257,16 @@ function validateCity(v: unknown, path: string): Validated<City> {
 
 function isPlainObject(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+
+/**
+ * Accept only safe CSS color literals: hex (#rgb..#rrggbbaa) or
+ * rgb()/rgba()/hsl()/hsla() functional notation. Blocks any value containing
+ * characters that could break out of an HTML attribute/element (`<`, `"`, etc.).
+ */
+const SAFE_COLOR = /^#[0-9a-fA-F]{3,8}$|^(?:rgb|rgba|hsl|hsla)\([0-9.,%\s/]+\)$/;
+function isSafeColor(c: string): boolean {
+  return SAFE_COLOR.test(c.trim());
 }
 
 function fail(error: string): { ok: false; error: string } {
