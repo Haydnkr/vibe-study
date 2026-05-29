@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect } from 'react';
 import { Marker, Polyline, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { TRANSPORT_STYLE } from '@/lib/transport';
+import { LEG_DURATION_MS, usePlaybackProgress } from '@/lib/usePlaybackProgress';
 import type { Leg } from '@/features/trips/types';
 
 interface Props {
@@ -30,43 +31,10 @@ export default function PlaybackOverlay({
   legs,
   color,
   onFinish,
-  legDurationMs = 2500,
+  legDurationMs = LEG_DURATION_MS,
 }: Props) {
-  const [legIdx, setLegIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
   const map = useMap();
-
-  // Animation loop
-  useEffect(() => {
-    if (legs.length === 0) {
-      onFinish();
-      return;
-    }
-    let startTime: number | null = null;
-    const totalMs = legs.length * legDurationMs;
-
-    const tick = (now: number) => {
-      if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
-      if (elapsed >= totalMs) {
-        setLegIdx(legs.length - 1);
-        setProgress(1);
-        onFinish();
-        return;
-      }
-      const idx = Math.floor(elapsed / legDurationMs);
-      const within = (elapsed % legDurationMs) / legDurationMs;
-      setLegIdx(idx);
-      setProgress(within);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [legs, legDurationMs, onFinish]);
+  const { legIdx, progress } = usePlaybackProgress(legs, onFinish, legDurationMs);
 
   // Zoom to fit each leg as it plays
   useEffect(() => {

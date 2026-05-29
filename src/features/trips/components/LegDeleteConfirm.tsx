@@ -1,6 +1,6 @@
 'use client';
 
-import Dialog from '@/components/ui/Dialog';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
 import { useTravelMapStore } from '@/features/trips/store';
 
 interface Props {
@@ -25,33 +25,21 @@ export default function LegDeleteConfirm({ pending, onClose }: Props) {
   }
 
   return (
-    <Dialog open={Boolean(pending)} onClose={onClose} label="Leg 삭제 확인">
-      <div className="p-6">
-        <h2 className="text-lg font-medium text-ink">Leg를 삭제할까요?</h2>
-        <p className="mt-3 text-sm text-body">
-          <strong className="text-ink">
-            {leg.from.name} → {leg.to.name}
-          </strong>{' '}
-          구간이 삭제됩니다.
-        </p>
-        <p className="mt-2 text-xs text-muted">이 작업은 되돌릴 수 없습니다.</p>
-        <div className="mt-6 flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-lg border border-hairline bg-canvas px-4 py-2 text-[15px] text-ink"
-          >
-            취소
-          </button>
-          <button
-            type="button"
-            onClick={handleDelete}
-            className="rounded-lg bg-red-600 px-4 py-2 text-[15px] font-medium text-white"
-          >
-            삭제
-          </button>
-        </div>
-      </div>
-    </Dialog>
+    <ConfirmDialog
+      open={Boolean(pending)}
+      label="Leg 삭제 확인"
+      title="Leg를 삭제할까요?"
+      confirmLabel="삭제"
+      onConfirm={handleDelete}
+      onClose={onClose}
+    >
+      <p className="mt-3 text-sm text-body">
+        <strong className="text-ink">
+          {leg.from.name} → {leg.to.name}
+        </strong>{' '}
+        구간이 삭제됩니다.
+      </p>
+      <p className="mt-2 text-xs text-muted">이 작업은 되돌릴 수 없습니다.</p>
+    </ConfirmDialog>
   );
 }

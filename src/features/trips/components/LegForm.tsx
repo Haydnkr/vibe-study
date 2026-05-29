@@ -89,40 +89,20 @@ export default function LegForm({ tripId, legId, onClose }: Props) {
 
         <div className="mt-4 space-y-4">
           <CitySearch label="출발 도시" value={from} onChange={setFrom} />
-          <div className="space-y-1">
-            <label className="block text-sm text-body">
-              출발 일시
-              <input
-                type="datetime-local"
-                value={departLocal}
-                onChange={(e) => setDepartLocal(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[15px] text-ink outline-none focus:border-ink"
-              />
-            </label>
-            {fromTzLabel && (
-              <p className="text-[11px] text-muted">
-                ⓘ <span className="font-medium">{fromTzLabel}</span> 현지시간으로 입력
-              </p>
-            )}
-          </div>
+          <DateTimeField
+            label="출발 일시"
+            value={departLocal}
+            onChange={setDepartLocal}
+            tzLabel={fromTzLabel}
+          />
 
           <CitySearch label="도착 도시" value={to} onChange={setTo} />
-          <div className="space-y-1">
-            <label className="block text-sm text-body">
-              도착 일시
-              <input
-                type="datetime-local"
-                value={arriveLocal}
-                onChange={(e) => setArriveLocal(e.target.value)}
-                className="mt-1 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[15px] text-ink outline-none focus:border-ink"
-              />
-            </label>
-            {toTzLabel && (
-              <p className="text-[11px] text-muted">
-                ⓘ <span className="font-medium">{toTzLabel}</span> 현지시간으로 입력
-              </p>
-            )}
-          </div>
+          <DateTimeField
+            label="도착 일시"
+            value={arriveLocal}
+            onChange={setArriveLocal}
+            tzLabel={toTzLabel}
+          />
 
           <fieldset>
             <legend className="text-sm text-body">교통수단</legend>
@@ -178,6 +158,38 @@ export default function LegForm({ tripId, legId, onClose }: Props) {
         </div>
       </form>
     </Dialog>
+  );
+}
+
+/** datetime-local 입력 + (도시 시간대 안내). 출발/도착 두 곳에서 공유. */
+function DateTimeField({
+  label,
+  value,
+  onChange,
+  tzLabel,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  tzLabel: string | null;
+}) {
+  return (
+    <div className="space-y-1">
+      <label className="block text-sm text-body">
+        {label}
+        <input
+          type="datetime-local"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="mt-1 w-full rounded-lg border border-hairline bg-canvas px-3 py-2 text-[15px] text-ink outline-none focus:border-ink"
+        />
+      </label>
+      {tzLabel && (
+        <p className="text-[11px] text-muted">
+          ⓘ <span className="font-medium">{tzLabel}</span> 현지시간으로 입력
+        </p>
+      )}
+    </div>
   );
 }
 

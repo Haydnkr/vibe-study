@@ -10,6 +10,7 @@ import {
   selectVisibleLegs,
   useTravelMapStore,
 } from '@/features/trips/store';
+import { NEUTRAL_COLOR } from '@/lib/transport';
 import CityMarker from './CityMarker';
 import PlaybackOverlay from './PlaybackOverlay';
 import TransportPolyline from './TransportPolyline';
@@ -51,8 +52,8 @@ export default function MapView() {
     [trips, playingTripId]
   );
   const playingColor = useMemo(() => {
-    if (!playingTrip?.categoryId) return '#888888';
-    return categories.find((c) => c.id === playingTrip.categoryId)?.color ?? '#888888';
+    if (!playingTrip?.categoryId) return NEUTRAL_COLOR;
+    return categories.find((c) => c.id === playingTrip.categoryId)?.color ?? NEUTRAL_COLOR;
   }, [playingTrip, categories]);
 
   // Derive visible legs + visit aggregation + bounds via store selectors.

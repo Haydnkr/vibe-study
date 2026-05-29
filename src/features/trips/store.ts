@@ -2,7 +2,7 @@ import { create, type StateCreator } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Category, City, Leg, Transport, Trip } from './types';
 import { ingestCity } from '@/lib/timezone';
-import { TRANSPORTS } from '@/lib/transport';
+import { NEUTRAL_COLOR, TRANSPORTS } from '@/lib/transport';
 
 interface TravelMapState {
   trips: Trip[];
@@ -270,9 +270,9 @@ export function selectCategoryById(
 /** Resolve the accent color for a Trip via its Category, or neutral fallback. */
 export function selectTripAccentColor(state: TravelMapState, tripId: string): string {
   const trip = selectTripById(state, tripId);
-  if (!trip?.categoryId) return '#888888';
+  if (!trip?.categoryId) return NEUTRAL_COLOR;
   const cat = selectCategoryById(state, trip.categoryId);
-  return cat?.color ?? '#888888';
+  return cat?.color ?? NEUTRAL_COLOR;
 }
 
 /** Aggregate visits per (name, country) across all Trips. Used by map markers. */

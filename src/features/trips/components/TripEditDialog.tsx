@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Dialog from '@/components/ui/Dialog';
+import { NEUTRAL_COLOR } from '@/lib/transport';
 import { useTravelMapStore } from '@/features/trips/store';
 import type { Trip } from '@/features/trips/types';
 
@@ -94,7 +95,7 @@ export default function TripEditDialog({ trip, onClose }: Props) {
               className="inline-block h-3 w-3 rounded-full"
               style={{
                 backgroundColor:
-                  categories.find((c) => c.id === categoryId)?.color ?? '#888888',
+                  categories.find((c) => c.id === categoryId)?.color ?? NEUTRAL_COLOR,
               }}
             />
             <span>이 색이 폴리라인에 적용됩니다</span>

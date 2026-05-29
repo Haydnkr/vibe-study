@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import { formatLocal, resolveTimezone, tzAbbreviation } from '@/lib/timezone';
 import { TRANSPORT_STYLE } from '@/lib/transport';
+import { LEG_DURATION_MS, usePlaybackProgress } from '@/lib/usePlaybackProgress';
 import type { Leg } from '@/features/trips/types';
 
 interface Props {
@@ -16,34 +16,8 @@ interface Props {
  * Displays two clocks: departure city + arrival city, both ticking the same
  * UTC instant in each city's local timezone. Updates ~60fps.
  */
-export default function PlaybackClockPanel({ legs, legDurationMs = 2500 }: Props) {
-  const [legIdx, setLegIdx] = useState(0);
-  const [progress, setProgress] = useState(0);
-  const rafRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (legs.length === 0) return;
-    let startTime: number | null = null;
-    const totalMs = legs.length * legDurationMs;
-    const tick = (now: number) => {
-      if (startTime === null) startTime = now;
-      const elapsed = now - startTime;
-      if (elapsed >= totalMs) {
-        setLegIdx(legs.length - 1);
-        setProgress(1);
-        return;
-      }
-      const idx = Math.floor(elapsed / legDurationMs);
-      const within = (elapsed % legDurationMs) / legDurationMs;
-      setLegIdx(idx);
-      setProgress(within);
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => {
-      if (rafRef.current !== null) cancelAnimationFrame(rafRef.current);
-    };
-  }, [legs, legDurationMs]);
+export default function PlaybackClockPanel({ legs, legDurationMs = LEG_DURATION_MS }: Props) {
+  const { legIdx, progress } = usePlaybackProgress(legs, undefined, legDurationMs);
 
   const leg = legs[legIdx];
   if (!leg) return null;

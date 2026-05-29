@@ -14,6 +14,9 @@ export default defineConfig({
   use: {
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
+    // next dev는 /app을 온디맨드 컴파일하므로 첫 네비게이션이 느릴 수 있다.
+    // 동시 cold 요청이 기본 30s를 넘겨 플레이크가 생기는 것을 방지.
+    navigationTimeout: 60_000,
   },
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },

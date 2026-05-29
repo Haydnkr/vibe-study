@@ -1,75 +1,26 @@
 'use client';
 
-import { useRef, useState } from 'react';
-import { useTravelMapStore } from '@/features/trips/store';
-import { downloadSnapshot, importFromText } from '@/lib/storage';
+import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { useDataPortability } from './useDataPortability';
 
 interface Props {
   onCreateTrip: () => void;
   onOpenCategoryManager: () => void;
 }
 
-type Notice = { kind: 'ok' | 'error'; message: string } | null;
-
 export default function AppHeader({ onCreateTrip, onOpenCategoryManager }: Props) {
-  const trips = useTravelMapStore((s) => s.trips);
-  const categories = useTravelMapStore((s) => s.categories);
-  const replaceAll = useTravelMapStore((s) => s.replaceAll);
-
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [notice, setNotice] = useState<Notice>(null);
-  const [confirmingImport, setConfirmingImport] = useState<
-    { trips: ReturnType<typeof useTravelMapStore.getState>['trips']; categories: ReturnType<typeof useTravelMapStore.getState>['categories'] } | null
-  >(null);
-
-  function handleExport() {
-    try {
-      downloadSnapshot(trips, categories);
-      flash({ kind: 'ok', message: `Export 완료 (Trip ${trips.length}개, Category ${categories.length}개)` });
-    } catch (e) {
-      flash({ kind: 'error', message: `Export 실패: ${(e as Error).message}` });
-    }
-  }
-
-  function handleImportPick() {
-    fileRef.current?.click();
-  }
-
-  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ''; // allow re-import of same file
-    if (!file) return;
-    try {
-      const text = await file.text();
-      const result = importFromText(text);
-      if (!result.ok || !result.snapshot) {
-        flash({ kind: 'error', message: `Import 거부: ${result.error}` });
-        return;
-      }
-      setConfirmingImport(result.snapshot);
-    } catch (err) {
-      flash({ kind: 'error', message: `파일 읽기 실패: ${(err as Error).message}` });
-    }
-  }
-
-  function confirmImport() {
-    if (!confirmingImport) return;
-    replaceAll(confirmingImport);
-    flash({
-      kind: 'ok',
-      message: `Import 완료 (Trip ${confirmingImport.trips.length}개, Category ${confirmingImport.categories.length}개)`,
-    });
-    setConfirmingImport(null);
-  }
-
-  function cancelImport() {
-    setConfirmingImport(null);
-  }
-
-  function flash(n: Notice) {
-    setNotice(n);
-    if (n) setTimeout(() => setNotice(null), 4500);
-  }
+  const {
+    trips,
+    categories,
+    fileRef,
+    notice,
+    confirmingImport,
+    handleExport,
+    handleImportPick,
+    handleFileChange,
+    confirmImport,
+    cancelImport,
+  } = useDataPortability();
 
   return (
     <>
@@ -131,47 +82,25 @@ export default function AppHeader({ onCreateTrip, onOpenCategoryManager }: Props
       )}
 
       {confirmingImport && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label="Import 확인"
-          className="fixed inset-0 z-[10000] flex items-center justify-center p-4"
+        <ConfirmDialog
+          open
+          label="Import 확인"
+          title="기존 데이터를 덮어쓸까요?"
+          confirmLabel="덮어쓰기"
+          tone="default"
+          onConfirm={confirmImport}
+          onClose={cancelImport}
         >
-          <button
-            type="button"
-            aria-label="닫기"
-            onClick={cancelImport}
-            className="absolute inset-0 bg-black/40"
-          />
-          <div className="relative w-full max-w-md rounded-xl bg-canvas p-6 shadow-xl">
-            <h2 className="text-lg font-medium text-ink">기존 데이터를 덮어쓸까요?</h2>
-            <p className="mt-3 text-sm text-body">
-              현재 store는 <strong>Trip {trips.length}개 · Category {categories.length}개</strong>
-              상태입니다. Import 파일은{' '}
-              <strong>
-                Trip {confirmingImport.trips.length}개 · Category {confirmingImport.categories.length}개
-              </strong>
-              로 완전히 교체됩니다.
-            </p>
-            <p className="mt-2 text-xs text-muted">병합하지 않습니다. 이 작업은 되돌릴 수 없습니다.</p>
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={cancelImport}
-                className="rounded-lg border border-hairline bg-canvas px-4 py-2 text-[15px] text-ink"
-              >
-                취소
-              </button>
-              <button
-                type="button"
-                onClick={confirmImport}
-                className="rounded-lg bg-ink px-4 py-2 text-[15px] font-medium text-white"
-              >
-                덮어쓰기
-              </button>
-            </div>
-          </div>
-        </div>
+          <p className="mt-3 text-sm text-body">
+            현재 store는 <strong>Trip {trips.length}개 · Category {categories.length}개</strong>
+            상태입니다. Import 파일은{' '}
+            <strong>
+              Trip {confirmingImport.trips.length}개 · Category {confirmingImport.categories.length}개
+            </strong>
+            로 완전히 교체됩니다.
+          </p>
+          <p className="mt-2 text-xs text-muted">병합하지 않습니다. 이 작업은 되돌릴 수 없습니다.</p>
+        </ConfirmDialog>
       )}
     </>
   );
