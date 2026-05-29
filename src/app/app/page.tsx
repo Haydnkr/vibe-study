@@ -11,6 +11,7 @@ import TripEditDialog from '@/features/trips/components/TripEditDialog';
 import TripDeleteConfirm from '@/features/trips/components/TripDeleteConfirm';
 import CategoryManagerDialog from '@/features/trips/components/CategoryManagerDialog';
 import LegForm from '@/features/trips/components/LegForm';
+import LegDeleteConfirm from '@/features/trips/components/LegDeleteConfirm';
 import PlaybackClockPanel from '@/features/trips/components/PlaybackClockPanel';
 import { useTravelMapStore } from '@/features/trips/store';
 import type { Trip } from '@/features/trips/types';
@@ -31,7 +32,10 @@ export default function AppPage() {
   const [editingTrip, setEditingTrip] = useState<Trip | undefined>(undefined);
   const [deletingTrip, setDeletingTrip] = useState<Trip | undefined>(undefined);
   const [categoryManagerOpen, setCategoryManagerOpen] = useState(false);
-  const [legFormTripId, setLegFormTripId] = useState<string | undefined>(undefined);
+  const [legForm, setLegForm] = useState<{ tripId: string; legId?: string } | undefined>(undefined);
+  const [deletingLeg, setDeletingLeg] = useState<{ tripId: string; legId: string } | undefined>(
+    undefined
+  );
 
   return (
     <div className="flex h-screen flex-col">
@@ -45,6 +49,8 @@ export default function AppPage() {
             <TripList
               onEditTrip={(trip) => setEditingTrip(trip)}
               onDeleteTrip={(trip) => setDeletingTrip(trip)}
+              onEditLeg={(tripId, legId) => setLegForm({ tripId, legId })}
+              onDeleteLeg={(tripId, legId) => setDeletingLeg({ tripId, legId })}
             />
             <div className="border-t border-hairline pt-4">
               <TransportFilter />
@@ -52,7 +58,7 @@ export default function AppPage() {
             <button
               type="button"
               disabled={!selectedTripId}
-              onClick={() => selectedTripId && setLegFormTripId(selectedTripId)}
+              onClick={() => selectedTripId && setLegForm({ tripId: selectedTripId })}
               title={!selectedTripId ? '먼저 여행을 선택하세요' : undefined}
               className="w-full rounded-lg bg-ink px-4 py-3 text-[15px] font-medium text-white disabled:opacity-40"
             >
@@ -83,7 +89,12 @@ export default function AppPage() {
         open={categoryManagerOpen}
         onClose={() => setCategoryManagerOpen(false)}
       />
-      <LegForm tripId={legFormTripId} onClose={() => setLegFormTripId(undefined)} />
+      <LegForm
+        tripId={legForm?.tripId}
+        legId={legForm?.legId}
+        onClose={() => setLegForm(undefined)}
+      />
+      <LegDeleteConfirm pending={deletingLeg} onClose={() => setDeletingLeg(undefined)} />
     </div>
   );
 }

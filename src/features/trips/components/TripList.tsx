@@ -8,9 +8,11 @@ import TripActionMenu from './TripActionMenu';
 interface Props {
   onEditTrip: (trip: Trip) => void;
   onDeleteTrip: (trip: Trip) => void;
+  onEditLeg: (tripId: string, legId: string) => void;
+  onDeleteLeg: (tripId: string, legId: string) => void;
 }
 
-export default function TripList({ onEditTrip, onDeleteTrip }: Props) {
+export default function TripList({ onEditTrip, onDeleteTrip, onEditLeg, onDeleteLeg }: Props) {
   const trips = useTravelMapStore((s) => s.trips);
   const selectedTripId = useTravelMapStore((s) => s.selectedTripId);
   const selectTrip = useTravelMapStore((s) => s.selectTrip);
@@ -29,6 +31,8 @@ export default function TripList({ onEditTrip, onDeleteTrip }: Props) {
           onSelect={() => selectTrip(trip.id)}
           onEdit={() => onEditTrip(trip)}
           onDelete={() => onDeleteTrip(trip)}
+          onEditLeg={onEditLeg}
+          onDeleteLeg={onDeleteLeg}
         />
       ))}
     </div>
@@ -41,9 +45,11 @@ interface CardProps {
   onSelect: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onEditLeg: (tripId: string, legId: string) => void;
+  onDeleteLeg: (tripId: string, legId: string) => void;
 }
 
-function TripCard({ trip, selected, onSelect, onEdit, onDelete }: CardProps) {
+function TripCard({ trip, selected, onSelect, onEdit, onDelete, onEditLeg, onDeleteLeg }: CardProps) {
   const accentColor = useTravelMapStore((s) => selectTripAccentColor(s, trip.id));
   const playingTripId = useTravelMapStore((s) => s.playingTripId);
   const startPlayback = useTravelMapStore((s) => s.startPlayback);
@@ -101,7 +107,13 @@ function TripCard({ trip, selected, onSelect, onEdit, onDelete }: CardProps) {
       {trip.legs.length > 0 && (
         <div className="mt-3 space-y-2">
           {trip.legs.map((leg) => (
-            <LegCard key={leg.id} leg={leg} accentColor={accentColor} />
+            <LegCard
+              key={leg.id}
+              leg={leg}
+              accentColor={accentColor}
+              onEdit={() => onEditLeg(trip.id, leg.id)}
+              onDelete={() => onDeleteLeg(trip.id, leg.id)}
+            />
           ))}
         </div>
       )}
