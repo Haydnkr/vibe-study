@@ -48,6 +48,9 @@ npm run dev                         # http://localhost:3000/app
 | 구버전 JSON `timezone` 자동 마이그레이션 | FR-014 | ✓ |
 | localStorage persist + hydration backfill | FR-007 | ✓ |
 | Leg 메모(note) | FR-010 | ✓ |
+| 여행 재생(playback) — 순차 이동 애니메이션 + 시계 패널 | (추가 기능) | ✓ |
+
+> 보안: Import 검증은 형식·필드·값 범위뿐 아니라 `Category.color`가 **안전한 CSS 색 형식(hex/rgb/hsl)** 인지도 확인하여, Leaflet `divIcon`으로 삽입될 때의 HTML 주입을 차단한다.
 
 상세 요구사항: `REQUIREMENTS.md` · capability specs: `openspec/specs/`
 
@@ -79,23 +82,30 @@ src/
 │   ├── page.tsx                Landing
 │   └── app/page.tsx            App shell + 모든 다이얼로그 오케스트레이션
 ├── components/
-│   ├── layout/AppHeader.tsx    상단 헤더 + Export/Import + 카테고리/+여행 진입
-│   └── ui/Dialog.tsx           모달 primitive (ESC + click-outside)
+│   ├── layout/AppHeader.tsx        상단 헤더 + 카테고리/+여행 진입
+│   ├── layout/useDataPortability.ts Export/Import 상태·로직 훅
+│   ├── ui/Dialog.tsx               모달 primitive (ESC + click-outside)
+│   └── ui/ConfirmDialog.tsx        공통 확인 다이얼로그 (삭제·덮어쓰기)
 ├── features/
 │   ├── trips/
-│   │   ├── store.ts             Zustand persist + selectors + 25 actions
+│   │   ├── store.ts             Zustand persist + selectors + actions
 │   │   ├── types.ts             Trip/Leg/City/Category 타입
 │   │   └── components/          TripList · TripActionMenu · TripCreateDialog
 │   │                            TripEditDialog · TripDeleteConfirm
-│   │                            CategoryManagerDialog · LegForm · LegCard
+│   │                            LegForm · LegCard · LegDeleteConfirm
+│   │                            CategoryManagerDialog · PlaybackClockPanel
 │   │                            EmptyState
-│   ├── map/components/         MapView · TransportPolyline · CityMarker
+│   ├── map/components/         MapView · TransportPolyline · CityMarker · PlaybackOverlay
 │   ├── search/                 Nominatim wrapper + CitySearch autocomplete
 │   └── filter/components/      TransportFilter
 └── lib/
     ├── transport.ts             TRANSPORT_STYLE (icon, dash, weight) + NEUTRAL_COLOR
     ├── timezone.ts              deriveTimezone, localToUtc, formatLocal, ingestCity
-    └── storage.ts               Export blob + Import 3-stage validation
+    ├── usePlaybackProgress.ts   재생 rAF 진행도 훅 + LEG_DURATION_MS
+    └── storage.ts               Export blob + Import 검증(형식·필드·값·색)
+
+e2e/                            Playwright E2E (helpers.ts + 8 spec 파일, 17 테스트)
+playwright.config.ts            E2E 설정 (next dev webServer 자동 기동)
 ```
 
 ---
@@ -119,7 +129,35 @@ src/
 npm run dev      # 개발 서버 (http://localhost:3000)
 npm run build    # 정적 빌드 → out/ (5 정적 페이지)
 npm run lint     # ESLint
+npm run test:e2e # Playwright E2E (Chromium)
 ```
+
+---
+
+## 테스트 (Playwright E2E)
+
+`e2e/` 에 **17개 E2E 테스트**가 핵심 사용자 흐름을 커버한다 (Chromium).
+
+```bash
+npm run test:e2e             # 전체 실행
+npx playwright test mvp.spec.ts   # 특정 파일만
+npx playwright test --ui     # UI 모드 (디버깅)
+```
+
+| 스펙 | 커버 |
+|---|---|
+| `trip.spec.ts` | Trip 생성 · Leg 생성→지도 렌더 · 새로고침 영속성 |
+| `mvp.spec.ts` | Leg 편집 · 삭제(확인) · 삭제 취소 (UC-004/AC-004) |
+| `crud.spec.ts` | Trip 제목 편집 · cascade 삭제 |
+| `filter.spec.ts` | 교통수단 필터 숨김 · 최소 1개 강제 |
+| `portability.spec.ts` | Export→Import 덮어쓰기 · 잘못된 JSON 거부 · color 주입 거부 |
+| `map.spec.ts` | 다중 방문 마커 합치기·팝업 · Category 색/회색 폴백 |
+| `timezone.spec.ts` | UTC→도시 현지 시간대 표시 |
+| `playback.spec.ts` | 재생 시계 패널 표시 후 자동 종료 |
+
+**전략**: 외부 의존(Nominatim)은 `page.route`로 모킹, 데이터가 필요한 케이스는 zustand persist 포맷으로 `localStorage`를 시드(`e2e/helpers.ts`)하여 네트워크 없이 결정적으로 실행. 첫 `next dev` 온디맨드 컴파일을 흡수하도록 `navigationTimeout`을 60s로 설정.
+
+설정: `playwright.config.ts` (개발 서버를 `webServer`로 자동 기동).
 
 ---
 
@@ -143,8 +181,9 @@ npm run lint     # ESLint
 | **Leg 드래그로 순서 변경** | `@dnd-kit` 등 추가 의존성 비용 vs MVP scope | 별도 change 후속 |
 | **Trip cascade 삭제 undo / 휴지통** | MVP scope 외, JSON Export로 백업 가능 | 별도 change 후속 |
 | **Category 색 대비비 검증** | 사용자 자유 색 → 회색 폴백과 구분 어려운 경우 발생 가능 | NFR 후속 검토 |
-| **Playwright E2E 자동화** | Session 4 계획 | DELIVERYPLAN §10 |
 | **`design.md` OQ1~OQ4 미해결** | Category UI 위치(헤더 채택)·Leg 정렬·Zod 도입(거절)·`accept-language=en`(적용) — 일부 임시 결정 | 향후 라운드에서 정식화 |
+
+> Playwright E2E 자동화는 완료됨 — 위 **테스트** 섹션 참고.
 
 ---
 
